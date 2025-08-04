@@ -11,9 +11,6 @@ import soft_wrist_lib as swl
 from cri.robot import SyncRobot, AsyncRobot
 from cri.controller import RTDEController
 
-np.set_printoptions(precision=2, suppress=True)
-
-
 
 ################################
 # Setup wrist and hand control #
@@ -22,47 +19,47 @@ np.set_printoptions(precision=2, suppress=True)
 # List available serial ports
 ports = serial.tools.list_ports.comports()
 for port in ports:
-    print(port.device)
-    
+    print(port.device)  
+
 # Open serial port
 ser = serial.Serial('COM4', baudrate=1000000, timeout=0.1)
 
-swl.close_hand(ser)
-swl.move_wrist(ser, flexion_angle=0, ulnar_angle=45)
-swl.move_wrist(ser, flexion_angle=0, ulnar_angle=-45)
-swl.move_wrist(ser, flexion_angle=90, ulnar_angle=0)
-swl.move_wrist(ser, flexion_angle=-90, ulnar_angle=0)
-swl.home_hand(ser)
 
+###############
+# Test Script #
+###############
 
-# # Test wrist and hand movements
-# swl.move_wrist(ser, flexion_extension=90, ulnar_radial=20)
-# print("Wrist moved to flexion 90, ulnar radial 20")
-# time.sleep(2)
-# swl.close_hand(ser)
-# print("Hand closed")
-# time.sleep(2)
-# swl.home_hand(ser)
-# print("Hand homed")
+# Set up base and work coordinate frames
+base_frame = (0, 0, 0, 0, 0, 0)
+work_frame = (0, -630, 350, -180, -90, -90)   # base frame: x->right, y->back, z->up
 
-
-
-# ###############################
-# # Setup UR5 coordinate frames #
-# ###############################
-
-# base_frame = (0, 0, 0, 0, 0, 0)
-# work_frame = (109.1, -487.0, 341.3, 180, 0, -90)   # base frame: x->right, y->back, z->up
-
-
-
-
-
-
-
-
-
-
+# Configure UR5 robot
+with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
+    robot.axes = 'sxyz'
+    robot.tcp = (0, 0, 285, 0, 0, 0)
+    robot.linear_speed = 100
+    robot.angular_speed = 100
+    robot.coord_frame = work_frame
+    
+    # Move
+    swl.home_hand(ser)
+    print("Moving robot to initial position...")
+    robot.move_linear((0, 0, 0, 0, 0, 0))
+    print("Robot moved to initial position.")
+    time.sleep(2)
+    print("Moving robot to work position...")
+    robot.move_linear((-245, -240, -20, 0, 0 , -90))
+    print("Robot moved to work position.")
+    time.sleep(2)
+    swl.move_wrist(ser, 15, 0)
+    swl.close_hand(ser)
+    time.sleep(2)
+    print("Moving robot to final position...")
+    robot.move_linear((0, 0, 0, 0, 0, 90))
+    print("Robot moved to final position.")
+    swl.home_hand(ser)
+    
+    
 
 # Close the serial port
 ser.close()
