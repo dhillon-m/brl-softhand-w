@@ -19,7 +19,7 @@ from cri.controller import RTDEController
 # List available serial ports
 ports = serial.tools.list_ports.comports()
 for port in ports:
-    print(port.device)  
+    print(port.device)
 
 # Open serial port
 ser = serial.Serial('COM4', baudrate=1000000, timeout=0.1)
@@ -41,7 +41,7 @@ with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
     robot.angular_speed = 100
     robot.coord_frame = work_frame
     
-    # Move
+    # Operations
     swl.home_hand(ser)
     print("Moving robot to initial position...")
     robot.move_linear((0, 0, 0, 0, 0, 0))
@@ -60,6 +60,5 @@ with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
     swl.home_hand(ser)
     
     
-
 # Close the serial port
 ser.close()

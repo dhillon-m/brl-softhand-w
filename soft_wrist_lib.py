@@ -1,5 +1,3 @@
-print("soft_wrist_lib.py loaded from", __file__)
-
 import time
 
 def checksum(packet):
@@ -23,10 +21,8 @@ def read_servo_moving(ser, servo_id):
     packet.append((~sum(packet[2:])) & 0xFF)
     ser.write(bytearray(packet))
     response = ser.read(7)
-    print(f"Moving response: {list(response)}")
     if len(response) == 7 and response[0] == 0xFF and response[1] == 0xFF:
         moving = response[5]
-        print("Moving status:", moving)
         return moving == 1
     return None
 
@@ -47,14 +43,13 @@ def wait_for_servo(ser, servo_ids=[1, 2, 3, 4], check_interval=0.1, timeout=10):
         for servo_id in servo_ids:
             moving = read_servo_moving(ser, servo_id)
             if moving is None:
-                print(f"Error reading servo {servo_id}")
                 return False
             if moving:
                 all_stopped = False
         if all_stopped:
             return True
         time.sleep(check_interval)
-    
+        
     print("Timeout reached before all servos stopped.")
     return False
 
@@ -103,7 +98,7 @@ def move_wrist(ser, flexion_angle, ulnar_angle):
     time.sleep(0.05)
     move_servo(ser, servo_id=4, position=ulnar_pos)
     time.sleep(0.05)
-    wait_for_servo(ser, servo_ids=[1, 2, 3, 4])
+    wait_for_servo(ser, servo_ids=[1, 4])
 
 
 def close_hand(ser):
@@ -115,7 +110,7 @@ def close_hand(ser):
     time.sleep(0.05)
     move_servo(ser, servo_id=3, position=2100)
     time.sleep(0.05)
-    wait_for_servo(ser, servo_ids=[1, 2, 3, 4])
+    wait_for_servo(ser, servo_ids=[2, 3])
 
 
 def open_hand(ser):
@@ -127,7 +122,7 @@ def open_hand(ser):
     time.sleep(0.05)
     move_servo(ser, servo_id=2, position=700)
     time.sleep(0.05)
-    wait_for_servo(ser, servo_ids=[1, 2, 3, 4])
+    wait_for_servo(ser, servo_ids=[2, 3])
 
 
 def home_hand(ser):
