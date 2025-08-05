@@ -1,5 +1,9 @@
 import time
 
+##################################
+# Useful for any servo operation #
+##################################
+
 def checksum(packet):
     """
     Calculate the checksum for a given packet.
@@ -70,6 +74,43 @@ def move_servo(ser, servo_id, position):
     ser.write(bytearray(packet))
 
 
+
+###########################
+# Useful for hand control #
+###########################
+
+# !!WARNING!!: The positions below must be adjusted for your specific hand
+# Use the Feetech software to find the correct positions for your servos
+
+def close_hand(ser):
+    """
+    Close the hand.
+    :param ser: Open serial port
+    """
+    move_servo(ser, servo_id=2, position=2200) # Position of extensor servo when hand is closed
+    time.sleep(0.05)
+    move_servo(ser, servo_id=3, position=2100) # Position of flexor servo when hand is closed
+    time.sleep(0.05)
+    wait_for_servo(ser, servo_ids=[2, 3])
+
+
+def open_hand(ser):
+    """
+    Open the hand.
+    :param ser: Open serial port
+    """
+    move_servo(ser, servo_id=3, position=1070) # Position of flexor servo when hand is open
+    time.sleep(0.05)
+    move_servo(ser, servo_id=2, position=700) # Position of extensor servo when hand is open
+    time.sleep(0.05)
+    wait_for_servo(ser, servo_ids=[2, 3])
+
+
+
+##############################
+# Specific for the SoftWrist #
+##############################
+
 def move_wrist(ser, flexion_angle, ulnar_angle):
     """
     Move the wrist to the specified positions.
@@ -99,30 +140,6 @@ def move_wrist(ser, flexion_angle, ulnar_angle):
     move_servo(ser, servo_id=4, position=ulnar_pos)
     time.sleep(0.05)
     wait_for_servo(ser, servo_ids=[1, 4])
-
-
-def close_hand(ser):
-    """
-    Close the hand.
-    :param ser: Open serial port
-    """
-    move_servo(ser, servo_id=2, position=2200)
-    time.sleep(0.05)
-    move_servo(ser, servo_id=3, position=2100)
-    time.sleep(0.05)
-    wait_for_servo(ser, servo_ids=[2, 3])
-
-
-def open_hand(ser):
-    """
-    Open the hand.
-    :param ser: Open serial port
-    """
-    move_servo(ser, servo_id=3, position=1070)
-    time.sleep(0.05)
-    move_servo(ser, servo_id=2, position=700)
-    time.sleep(0.05)
-    wait_for_servo(ser, servo_ids=[2, 3])
 
 
 def home_hand(ser):
