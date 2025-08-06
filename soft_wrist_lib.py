@@ -89,7 +89,7 @@ def close_hand(ser):
     """
     move_servo(ser, servo_id=2, position=2200) # Position of extensor servo when hand is closed
     time.sleep(0.05)
-    move_servo(ser, servo_id=3, position=2900) # Position of flexor servo when hand is closed
+    move_servo(ser, servo_id=3, position=2100) # Position of flexor servo when hand is closed
     time.sleep(0.05)
     wait_for_servo(ser, servo_ids=[2, 3])
 
