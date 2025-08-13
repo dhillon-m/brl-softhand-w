@@ -6,10 +6,65 @@ import serial
 import serial.tools.list_ports
 import time
 import numpy as np
+import csv
+import threading
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 import soft_wrist_lib as swl
 from cri.robot import SyncRobot, AsyncRobot
 from cri.controller import RTDEController
+
+
+################
+# Data storage #
+################
+
+# Logging buffers
+timestamps, joint_data, pose_data = [], [], []
+
+# Sampler thread control
+_log_stop = threading.Event()
+_log_thread = None
+start_time = None
+
+def _sampler(robot, dt = 0.05):
+    """Poll robot state at fixed rate and append to buffers."""
+    while not _log_stop.is_set():
+        t = time.time() - start_time
+        try:
+            j = tuple(robot.joint_angles)
+            p = tuple(robot.pose)
+            timestamps.append(t)
+            joint_data.append(j)
+            pose_data.append(p)
+        except Exception:
+            pass
+        time.sleep(dt)
+
+def start_logger(robot, dt = 0.05):
+    """Begin background logging of robot state."""
+    global _log_thread, start_time
+    start_time = time.time()
+    _log_stop.clear()
+    _log_thread = threading.Thread(target=_sampler, args=(robot, dt), daemon=True)
+    _log_thread.start()
+    
+def stop_logger():
+    """Stop background logging of robot state."""
+    _log_stop.set()
+    if _log_thread is not None:
+        _log_thread.join()
+
+def save_to_csv(filename):
+    """Save logged data to a CSV file."""
+    header = ["time_s"] + [f"joint_{i+1}_deg" for i in range(6)] + \
+             ["x_mm", "y_mm", "z_mm", "rx_deg", "ry_deg", "rz_deg"]
+    with open(filename, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        for t, j, p in zip(timestamps, joint_data, pose_data):
+            w.writerow([t] + list(j) + list(p))
 
 
 ################################
@@ -41,24 +96,52 @@ with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
     robot.angular_speed = 100
     robot.coord_frame = work_frame
     
+    # Home position
+    swl.home_hand(ser)
+    robot.start_linear
+    
+    # Start logging robot state
+    start_logger(robot, dt=0.05)
+    
     # Operations
-    swl.home_hand(ser)
-    print("Moving robot to initial position...")
-    robot.move_linear((0, 0, 0, 0, 0, 0))
-    print("Robot moved to initial position.")
-    time.sleep(2)
-    print("Moving robot to work position...")
     robot.move_linear((-245, -240, -20, 0, 0 , -90))
-    print("Robot moved to work position.")
     time.sleep(2)
-    swl.move_wrist(ser, 15, 0)
-    swl.close_hand(ser)
+    
+    robot.move_linear((0, 0, 0, 0, 0, 0))
     time.sleep(2)
-    print("Moving robot to final position...")
-    robot.move_linear((0, 0, 0, 0, 0, 90))
-    print("Robot moved to final position.")
-    swl.home_hand(ser)
+    
+    # Stop logging
+    stop_logger()
     
     
 # Close the serial port
 ser.close()
+
+
+######################
+# Save data and plot #
+######################
+save_to_csv("test_log")
+
+# Quick plots from buffers
+data_j = np.array(joint_data)
+data_p = np.array(pose_data)
+
+# 2D: Joint angles vs time
+plt.figure()
+for i in range(data_j.shape[1]):
+    plt.plot(timestamps, data_j[:, i], label=f'Joint {i+1}')
+plt.xlabel('Time [s]')
+plt.ylabel('Joint Angle [deg]')
+plt.title('UR5 Joint Angles Over Time')
+plt.legend()
+plt.grid(True)
+
+# 3D: End effector path (x,y,z)
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(data_p[:, 0], data_p[:, 1], data_p[:, 2])
+ax.set_xlabel('X [mm]'); ax.set_ylabel('Y [mm]'); ax.set_zlabel('Z [mm]')
+ax.set_title('End Effector Path')
+plt.show()
