@@ -10,11 +10,14 @@ import csv
 import threading
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D)
+from mpl_toolkits.mplot3d import Axes3D
 
 import soft_wrist_lib as swl
 from cri.robot import SyncRobot, AsyncRobot
 from cri.controller import RTDEController
+
+# Serial port lock for thread safety
+serial_lock = threading.Lock()
 
 
 ################
@@ -68,6 +71,35 @@ def save_to_csv(filename):
             w.writerow([t] + list(j) + list(p))
 
 
+##############################
+# Real-time TCP update thread #
+##############################
+
+_tcp_stop = threading.Event()
+_tcp_thread = None
+
+def _tcp_updater(robot, ser, dt=0.01):
+    """Update robot TCP in real time based on wrist angles."""
+    while not _tcp_stop.is_set():
+        with serial_lock:
+            flexion_angle, ulnar_angle = swl.get_wrist_angles(ser)
+        if flexion_angle is not None and ulnar_angle is not None:
+            tcp_pose = swl.compute_tcp_from_wrist(flexion_angle, ulnar_angle)
+            robot.tcp = tuple(tcp_pose)
+        time.sleep(dt)
+
+def start_tcp_updater(robot, ser, dt=0.01):
+    global _tcp_thread
+    _tcp_stop.clear()
+    _tcp_thread = threading.Thread(target=_tcp_updater, args=(robot, ser, dt), daemon=True)
+    _tcp_thread.start()
+
+def stop_tcp_updater():
+    _tcp_stop.set()
+    if _tcp_thread is not None:
+        _tcp_thread.join()
+
+
 ################################
 # Setup wrist and hand control #
 ################################
@@ -78,7 +110,7 @@ for port in ports:
     print(port.device)
 
 # Open serial port
-# ser = serial.Serial('COM4', baudrate=1000000, timeout=0.1)
+ser = serial.Serial('COM5', baudrate=1000000, timeout=0.1)
 
 
 ###############
@@ -87,42 +119,74 @@ for port in ports:
 
 # Set up base and work coordinate frames
 base_frame = (0, 0, 0, 0, 0, 0)
-work_frame = (0, -630, 350, -180, -90, -90)   # base frame: x->right, y->back, z->up
+work_frame = (10, -580, 350, 90, 0, 0)   # base frame: x->right, y->back, z->up
 
 # Configure UR5 robot
 with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
     robot.axes = 'sxyz'
     robot.tcp = (0, 0, 285, 0, 0, 0)
-    robot.linear_speed = 50
-    robot.angular_speed = 50
+    robot.linear_speed = 100
+    robot.angular_speed = 100
     robot.coord_frame = work_frame
     
     # Home position
-    # swl.home_hand(ser)
+    with serial_lock:
+        swl.home_hand(ser)
     robot.move_linear((0, 0, 0, 0, 0, 0))
     
     # Start logging robot state
     start_logger(robot, dt=0.01)
+
+    # Start TCP updater
+    start_tcp_updater(robot, ser, dt=0.01)
+
+    ##############
+    # Operations #
+    ##############
+
+    # Move to twister
+    for _ in range(3):
+        robot.move_linear((1, -255, -5, 0, 0, 0))
+        time.sleep(2)
+        swl.close_hand(ser)
+        swl.wait_for_servo(ser, servo_ids=[2,3])
+        time.sleep(2)
+
+        # Rotate
+        robot.move_linear((1, -255, -5, 0, 30, 0))
+        time.sleep(2)
+
+        # Release and lift
+        swl.open_hand(ser)
+        swl.wait_for_servo(ser, servo_ids=[2,3])
+        time.sleep(2)
+        robot.move_linear((1, -235, -5, 0, 30, 0))  # Lift
+        time.sleep(2)
+
+        # Unrotate wrist
+        robot.move_linear((1, -235, -5, 0, 0, 0))
+        time.sleep(2)
     
-    # Operations
-    robot.move_linear((-245, -240, -20, 0, 0 , -90))
-    time.sleep(2)
-    
+    # Home position
+    with serial_lock:
+        swl.home_hand(ser)
     robot.move_linear((0, 0, 0, 0, 0, 0))
-    time.sleep(2)
-    
+
+    # Stop TCP updater
+    stop_tcp_updater()
+
     # Stop logging
     stop_logger()
     
     
 # Close the serial port
-# ser.close()
+ser.close()
 
 
 ######################
 # Save data and plot #
 ######################
-save_to_csv("test_log")
+save_to_csv("stack_no_wrist")
 
 # Quick plots from buffers
 data_j = np.array(joint_data)
