@@ -186,7 +186,7 @@ ser.close()
 ######################
 # Save data and plot #
 ######################
-save_to_csv("stack_no_wrist")
+save_to_csv("stack_no_wrist.csv")
 
 # Quick plots from buffers
 data_j = np.array(joint_data)
