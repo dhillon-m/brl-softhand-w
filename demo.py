@@ -28,8 +28,13 @@ ser = serial.Serial('COM5', baudrate=1000000, timeout=0.1)
 ###############
 # Test Script #
 ###############
-swl.open_hand(ser)
-swl.wait_for_servo(ser, servo_ids=[2,3])
+
+
+swl.home_hand(ser)
+swl.wait_for_servo(ser, servo_ids=[1,2,3,4])
+
+
+
 
 # Close the serial port
 ser.close()

@@ -113,9 +113,9 @@ def close_hand(ser):
     Close the hand.
     :param ser: Open serial port
     """
-    move_servo(ser, servo_id=2, position=3000) # Position of extensor servo when hand is closed
+    move_servo(ser, servo_id=2, position=3200) # Position of extensor servo when hand is closed
     time.sleep(0.2)
-    move_servo(ser, servo_id=3, position=3000) # Position of flexor servo when hand is closed
+    move_servo(ser, servo_id=3, position=3200) # Position of flexor servo when hand is closed
     time.sleep(0.05)
 
 
@@ -124,9 +124,9 @@ def open_hand(ser):
     Open the hand.
     :param ser: Open serial port
     """
-    move_servo(ser, servo_id=3, position=900) # Position of flexor servo when hand is open
+    move_servo(ser, servo_id=3, position=750) # Position of flexor servo when hand is open
     time.sleep(0.2)
-    move_servo(ser, servo_id=2, position=900) # Position of extensor servo when hand is open
+    move_servo(ser, servo_id=2, position=450) # Position of extensor servo when hand is open
     time.sleep(0.05)
 
 

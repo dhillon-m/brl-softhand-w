@@ -130,50 +130,154 @@ with AsyncRobot(SyncRobot(RTDEController(ip='192.168.1.164'))) as robot:
     robot.coord_frame = work_frame
     
     # Home position
-    with serial_lock:
-        swl.home_hand(ser)
     robot.move_linear((0, 0, 0, 0, 0, 0))
+    swl.home_hand(ser)
     
     # Start logging robot state
     start_logger(robot, dt=0.01)
-
-    # Start TCP updater
-    start_tcp_updater(robot, ser, dt=0.01)
 
     ##############
     # Operations #
     ##############
 
-    # Move to twister
-    for _ in range(3):
-        robot.move_linear((1, -255, -5, 0, 0, 0))
-        time.sleep(2)
-        swl.close_hand(ser)
-        swl.wait_for_servo(ser, servo_ids=[2,3])
-        time.sleep(2)
+    # Cube 1
+    robot.move_linear((196, -162, 2, 0, 5, 0))   # Above cube
+    robot.move_linear((196, -262, 2, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((196, -162, 2, 0, 5, 0))
 
-        # Rotate
-        robot.move_linear((1, -255, -5, 0, 30, 0))
-        time.sleep(2)
+    # Place 1
+    # swl.move_wrist(ser, 0, 60)
+    robot.move_linear((-100, -171, 185, 0, 45, 0))
+    robot.move_linear((-100, -271, 185, 0, 45, 0))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((-100, -171, 185, 0, 45, 0))
+    # swl.move_wrist(ser, 0, 0)
 
-        # Release and lift
-        swl.open_hand(ser)
-        swl.wait_for_servo(ser, servo_ids=[2,3])
-        time.sleep(2)
-        robot.move_linear((1, -235, -5, 0, 30, 0))  # Lift
-        time.sleep(2)
 
-        # Unrotate wrist
-        robot.move_linear((1, -235, -5, 0, 0, 0))
-        time.sleep(2)
+
+    # Cube 2
+    robot.move_linear((321, -162, 2, 0, 5, 0))   # Above cube
+    robot.move_linear((321, -262, 2, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((321, -162, 2, 0, 5, 0))
+
+    # Place 2
+    # swl.move_wrist(ser, 0, -60)
+    robot.move_linear((32, -171, 127, 0, -64, 0))
+    robot.move_linear((32, -271, 127, 0, -64, 0))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((32, -171, 127, 0, -64, 0))
+    # swl.move_wrist(ser, 0, 0)
+
+
+
+    # Cube 3
+    robot.move_linear((196, -171, 127, 0, 5, 0))   # Above cube
+    robot.move_linear((196, -271, 127, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((196, -171, 127, 0, 5, 0))
+
+    # Place 3
+    robot.move_linear((-102, -182, 160, 0, 0, 90))
+    robot.move_linear((-102, -282, 160, 0, 0, 90))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((-102, -182, 160, 0, 0, 90))
+
+
+    # Cube 4
+    robot.move_linear((321, -171, 127, 0, 5, 0))   # Above cube
+    robot.move_linear((321, -271, 127, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((321, -171, 127, 0, 5, 0))
+
+    # Place 4
+    robot.move_linear((59, -141, 152, 0, 0, -90))
+    robot.move_linear((59, -241, 152, 0, 0, -90))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((59, -141, 152, 0, 0, -90))
+
+
+
+    # Cube 5
+    robot.move_linear((196, -171, 252, 0, 5, 0))   # Above cube
+    robot.move_linear((196, -271, 252, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((196, -171, 252, 0, 5, 0))
+
+    # Place 5
+    # swl.move_servo(ser, 1, 450)
+    robot.move_linear((-100, 105, 155, -80, 0, 0))
+    robot.move_linear((-100, 95, 155, -80, 0, 0))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((-100, 105, 155, -80, 0, 0))
+    # swl.move_servo(ser, 1, 2047)
+
+
+    # Cube 6
+    robot.move_linear((321, -171, 252, 0, 5, 0))   # Above cube
+    robot.move_linear((321, -271, 252, 0, 5, 0))   # Lower to cube
+    swl.close_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(10)
+    robot.move_linear((321, -171, 252, 0, 5, 0))
+
+    # Place 6
+    # swl.move_wrist(ser, 45, 0)
+    robot.move_linear((32, -185, 225, 55, 0, 0))
+    robot.move_linear((32, -195, 225, 55, 0, 0))
+    swl.open_hand(ser)
+    swl.wait_for_servo(ser, servo_ids=[2,3])
+    time.sleep(2)
+    robot.move_linear((32, -185, 225, 55, 0, 0))
+    # swl.move_wrist(ser, 0, 0)
+
+    # # Move to twister
+    # for _ in range(3):
+    #     robot.move_linear((1, -255, -5, 0, 0, 0))
+    #     time.sleep(2)
+    #     swl.close_hand(ser)
+    #     swl.wait_for_servo(ser, servo_ids=[2,3])
+    #     time.sleep(2)
+
+    #     # Rotate
+    #     robot.move_linear((1, -255, -5, 0, 30, 0))
+    #     time.sleep(2)
+
+    #     # Release and lift
+    #     swl.open_hand(ser)
+    #     swl.wait_for_servo(ser, servo_ids=[2,3])
+    #     time.sleep(2)
+    #     robot.move_linear((1, -235, -5, 0, 30, 0))  # Lift
+    #     time.sleep(2)
+
+    #     # Unrotate wrist
+    #     robot.move_linear((1, -235, -5, 0, 0, 0))
+    #     time.sleep(2)
     
     # Home position
-    with serial_lock:
-        swl.home_hand(ser)
+    swl.home_hand(ser)
     robot.move_linear((0, 0, 0, 0, 0, 0))
-
-    # Stop TCP updater
-    stop_tcp_updater()
 
     # Stop logging
     stop_logger()
