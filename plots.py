@@ -83,13 +83,23 @@ def plot_end_effector_path(df, title, xlim, ylim, zlim):
             if 'Stack' in title:
                 for i in range(len(x)-1):
                     ax.plot(x[i:i+2], z[i:i+2], y[i:i+2], color=colors[i])
-                ax.set_title(f"Stack Test End Effector Path - {title}")
+                ax.set_title(f"End Effector Path")
                 ax.set_xlabel('X (mm)')
                 ax.set_ylabel('Y (mm)')
                 ax.set_zlabel('Z (mm)')
                 ax.set_xlim(xlim)
                 ax.set_ylim(zlim)
                 ax.set_zlim(ylim)
+                # Automatically annotate the point with the largest value on the plotted z axis (y_mm from CSV)
+                if title == 'Stack Without Wrist Actuation':
+                    idx = df['y_mm'].idxmax()
+                    circle_x = df.loc[idx, 'x_mm']
+                    circle_y = df.loc[idx, 'z_mm']
+                    circle_z = df.loc[idx, 'y_mm']
+                    ax.scatter([circle_x], [circle_y], [circle_z], s=200, facecolors='none', edgecolors='red', linewidths=2, zorder=10)
+                    ax.text(circle_x, circle_y, circle_z+10, 'Extreme Compensatory Movement', color='red',
+                        ha='center', va='bottom', fontsize=10, fontweight='bold', rotation=0,
+                        bbox=dict(facecolor='white', alpha=0.7, edgecolor='red'))
             else:
                 for i in range(len(x)-1):
                     ax.plot(x[i:i+2], y[i:i+2], z[i:i+2], color=colors[i])
