@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 
-import soft_wrist_lib as swl
+import softhand_w_lib as swl
 from cri.robot import SyncRobot, AsyncRobot
 from cri.controller import RTDEController
 

@@ -122,6 +122,81 @@ def plot_end_effector_path(df, title, xlim, ylim, zlim):
     else:
         print(f"Missing columns in {title}: {missing}")
 
+# New: combined stack test 3D plot without time-based colormap
+def plot_stack_end_effector_paths(df_label_pairs, xlim, ylim, zlim):
+    """
+    Plot both stack test end effector paths on one 3D plot for easier comparison.
+    Axes follow previous stack convention (X, Z, Y) where original Y and Z swapped.
+    df_label_pairs: list of (df, label) with label being either 'With Wrist Actuation' or 'Without Wrist Actuation'.
+    """
+    from matplotlib import ticker
+    import numpy as np
+    # Filter valid dataframes
+    valid = [(df, label) for df, label in df_label_pairs if df is not None and all(c in df.columns for c in ['x_mm','y_mm','z_mm'])]
+    if not valid:
+        print("No valid stack datasets for combined plot.")
+        return
+    # Compute limits if not provided (fallback to passed in otherwise)
+    all_x = np.concatenate([df['x_mm'].values for df,_ in valid]) if valid else np.array([0,1])
+    all_y = np.concatenate([df['y_mm'].values for df,_ in valid]) if valid else np.array([0,1])
+    all_z = np.concatenate([df['z_mm'].values for df,_ in valid]) if valid else np.array([0,1])
+    xlim_auto = (np.nanmin(all_x), np.nanmax(all_x))
+    ylim_auto = (np.nanmin(all_y), np.nanmax(all_y))
+    zlim_auto = (np.nanmin(all_z), np.nanmax(all_z))
+    # Use provided limits if they span data; else auto
+    def span_ok(span, auto):
+        return span[0] <= auto[0] and span[1] >= auto[1]
+    if not span_ok(xlim, xlim_auto): xlim = xlim_auto
+    if not span_ok(ylim, ylim_auto): ylim = ylim_auto
+    if not span_ok(zlim, zlim_auto): zlim = zlim_auto
+    fig = plt.figure(figsize=(10,8))
+    ax = fig.add_subplot(111, projection='3d')
+    color_map = {
+        'Without Wrist Actuation': 'blue',
+        'With Wrist Actuation': 'red'
+    }
+    for df, label in valid:
+        pass
+    # Reorder so 'Without Wrist Actuation' (blue) plots first, then 'With Wrist Actuation' (red dashed on top)
+    order = []
+    for desired in ['Without Wrist Actuation', 'With Wrist Actuation']:
+        for df, label in valid:
+            if label == desired:
+                order.append((df, label))
+    # Fallback if labels unexpected
+    if not order:
+        order = valid
+    for df, label in order:
+        x = df['x_mm'].values
+        y = df['y_mm'].values
+        z = df['z_mm'].values
+        ls = '--' if label == 'With Wrist Actuation' else '-'
+        zord = 5 if label == 'With Wrist Actuation' else 3
+        ax.plot(x, z, y, color=color_map.get(label,'black'), linestyle=ls, linewidth=2, zorder=zord, label=f'Stack {label}')
+    ax.set_title('Stack Test End Effector Paths')
+    ax.set_xlabel('X (mm)')
+    ax.set_ylabel('Y (mm)')
+    ax.set_zlabel('Z (mm)')
+    ax.set_xlim(xlim)
+    ax.set_ylim(zlim)  # swapped
+    ax.set_zlim(ylim)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
+    ax.grid(which='major', axis='x', linestyle='-', color='gray')
+    # Annotation: extreme compensatory movement (max y_mm) for without wrist
+    for df, label in valid:
+        if label == 'Without Wrist Actuation':
+            if not df['y_mm'].empty:
+                idx = df['y_mm'].idxmax()
+                circle_x = df.loc[idx,'x_mm']
+                circle_y = df.loc[idx,'z_mm']
+                circle_z = df.loc[idx,'y_mm']
+                ax.scatter([circle_x],[circle_y],[circle_z], s=200, facecolors='none', edgecolors='blue', linewidths=2, zorder=10)
+                ax.text(circle_x, circle_y, circle_z+10, 'Extreme Compensatory Movement', color='blue', ha='center', va='bottom', fontsize=10, fontweight='bold', bbox=dict(facecolor='white', alpha=0.7, edgecolor='blue'))
+            break
+    ax.legend()
+    return fig, ax
+
 def main():
     base_dir = os.path.dirname(os.path.dirname(__file__))
     # Rotation test files
@@ -171,8 +246,19 @@ def main():
         zlim_3d = (np.nanmin(all_z), np.nanmax(all_z)) if all_z.size > 0 else (0, 1)
         for df, label in padded_dfs:
             if df is not None:
+                # Always plot joint angles individually
                 plot_joint_angles(df, label if not stack else f'Stack {label}', xlim, ylim_joint)
-                plot_end_effector_path(df, label if not stack else f'Stack {label}', xlim_3d, ylim_3d, zlim_3d)
+        # 3D end effector paths
+        if stack:
+            # Combined stack plot without time-based color gradient
+            # Use original (unpadded) dfs for spatial trajectory
+            original_pairs = [(df, label) for df, label in dfs]
+            plot_stack_end_effector_paths(original_pairs, xlim_3d, ylim_3d, zlim_3d)
+        else:
+            # Rotation tests: keep per-dataset time-gradient plots
+            for df, label in padded_dfs:
+                if df is not None:
+                    plot_end_effector_path(df, label, xlim_3d, ylim_3d, zlim_3d)
 
     # Plot rotation test
     plot_from_files([
