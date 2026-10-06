@@ -10,7 +10,7 @@
 Dhillon B. Merritt, Christopher J. Ford, Haoran Li, Malia Smith, Zhixing Chen, Efi Psomopoulou\*, Nathan F. Lepora\*  
 *Bristol Robotics Laboratory, University of Bristol* · \*Equal contribution
 
-This repository contains the Python control code for the **SoftHand Model-W (SoftHand-W)**. The SoftHand-W is a 3D-printed hand based on the Pisa/IIT SoftHand. It adds an antagonistic tendon mechanism and a **2-DoF tendon-driven wrist**. Four servos drive it:
+This repository contains the CAD (STEP) and Python control code for the **SoftHand Model-W (SoftHand-W)**. The SoftHand-W is a 3D-printed hand based on the Pisa/IIT SoftHand. It adds an antagonistic tendon mechanism and a **2-DoF tendon-driven wrist**. Four servos drive it:
 
 - **Fingers:** active flexion and extension of all five fingers.
 - **Wrist:** active flexion/extension and radial/ulnar deviation of the palm.
@@ -25,6 +25,7 @@ The hand keeps the synergistic, self-adaptive grasping of the SoftHand family.
 
 - [Highlights](#highlights)
 - [Hardware](#hardware)
+- [CAD](#cad)
 - [Software](#software)
 - [Getting started](#getting-started)
 - [Library reference](#library-reference)
@@ -77,6 +78,20 @@ Distal Denavit–Hartenberg parameters of the wrist:
 | ----- | ------------------------ | ------ | --- | - | -- |
 | 1     | Ulnar / radial deviation | 34     | π/2 | 0 | θ₁ |
 | 2     | Flexion / extension      | 48     | 0   | 0 | θ₂ |
+
+## CAD
+
+All parts are STEP files in [`cad/`](cad), grouped the same way as the original design. [`Assembly - Final.step`](cad) is the complete hand and wrist.
+
+| Folder | Contents |
+| --- | --- |
+| [`cad/Fingers/`](cad/Fingers) | Proximal, intermediate and distal phalanges, the middle gear, phalange connectors, and a full finger assembly (plus an exploded view) |
+| [`cad/Palm/`](cad/Palm) | Palm, palm covers, and the finger and palm layout |
+| [`cad/Wrist/`](cad/Wrist) | The 2-DoF wrist (assembled and exploded) and the 16 mm bearing |
+| [`cad/Actuation/`](cad/Actuation) | Tendon spools (finger, flexion, deviation), servo adapter, Bowden guides, and reference models of the STS3215 servo and 7 mm bearing |
+| [`cad/Testing/`](cad/Testing) | Experiment parts: a UR5 tool flange adapter, a retaining bracket, the test cube and reorientation die, and a screw test piece |
+
+The servo and bearing models are there for fitting checks only. Those parts are bought, not printed.
 
 ## Software
 
