@@ -16,8 +16,8 @@ import softhand_w_lib as swl
 from cri.robot import SyncRobot, AsyncRobot
 from cri.controller import RTDEController
 
-# Serial port lock for thread safety
-serial_lock = threading.Lock()
+# Share the library's serial port lock so all threads are serialised on one lock
+serial_lock = swl.serial_lock
 
 
 ################

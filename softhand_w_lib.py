@@ -1,7 +1,7 @@
 import time
 import threading
-# Serial port lock for thread safety
-serial_lock = threading.Lock()
+# Serial port lock for thread safety (re-entrant so callers can hold it across several reads)
+serial_lock = threading.RLock()
 
 ##################################
 # Useful for any servo operation #
@@ -139,8 +139,8 @@ def move_wrist(ser, flexion_angle, ulnar_angle):
     """
     Move the wrist to the specified positions.
     :param ser: Open serial port
-    :param flexion_angle: Position value for wrist flexion/extension (servo 1)
-    :param ulnar_angle: Position value for ulnar/radial deviation (servo 2)
+    :param flexion_angle: Wrist flexion/extension angle in degrees (servo 1)
+    :param ulnar_angle: Ulnar/radial deviation angle in degrees (servo 4)
     """
     # Joint mapping
     flexion_deg_per_pos = 360 / (1.8 * (4095 - 0))
