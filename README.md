@@ -198,4 +198,4 @@ The design builds on the Pisa/IIT SoftHand and the BRL SoftHand line, including 
 
 ## License
 
-The code in this repository is released under the [MIT License](LICENSE).
+Everything in this repository, including the code and the CAD files, is released under the [MIT License](LICENSE).
